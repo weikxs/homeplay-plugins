@@ -1,0 +1,20 @@
+name: Takedown request
+description: You hold rights in something a plugin touches and want it reviewed
+labels: [takedown]
+body:
+  - type: input
+    id: plugin
+    attributes:
+      label: Plugin
+    validations:
+      required: true
+  - type: textarea
+    id: rights
+    attributes:
+      label: The rights you hold and why the plugin should be removed
+    validations:
+      required: true
+  - type: input
+    id: contact
+    attributes:
+      label: How to reach you if we need more information (optional)

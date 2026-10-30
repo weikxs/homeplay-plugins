@@ -1,0 +1,32 @@
+name: Plugin request
+description: Suggest a plugin for a service you run yourself or an open API
+labels: [plugin request]
+body:
+  - type: input
+    id: service
+    attributes:
+      label: Service
+      placeholder: A self-hosted music server, a WebDAV folder, an open music catalogue
+    validations:
+      required: true
+  - type: input
+    id: api
+    attributes:
+      label: Link to its public API documentation
+      placeholder: https://docs.example/api
+    validations:
+      required: true
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - label: The service is run by the user, or offers this API openly to everyone (with the user's own key if it asks for one).
+          required: true
+        - label: The plugin would not need to get around any access rule (undocumented signing, risk control, paywalls, DRM, rate limits).
+          required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: What the plugin should do
+      description: Search, play, lyrics, charts…

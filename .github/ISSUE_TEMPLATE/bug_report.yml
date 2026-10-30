@@ -1,0 +1,41 @@
+name: Bug report
+description: A plugin does not work as documented
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Never post your server address, user name, password, token or API key.** Replace them with
+        placeholders such as `https://music.example` and `demo` before posting.
+  - type: input
+    id: plugin
+    attributes:
+      label: Plugin and version
+      placeholder: Subsonic 1.0.0
+    validations:
+      required: true
+  - type: input
+    id: app
+    attributes:
+      label: App, version and platform
+      placeholder: TimbreBox 0.2.0 on Android 14
+    validations:
+      required: true
+  - type: input
+    id: server
+    attributes:
+      label: Server software and version
+      placeholder: Navidrome 0.53 / Jellyfin 10.10 / a WebDAV folder on a NAS
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error messages
+      description: With addresses, accounts and private links replaced by placeholders.
+      render: text
