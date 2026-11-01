@@ -1,0 +1,10 @@
+{
+  "desc": "HomePlay Plugins: play your own music at home",
+  "plugins": [
+    {
+      "name": "Subsonic",
+      "url": "https://raw.githubusercontent.com/weikxs/homeplay-plugins/main/plugins/subsonic/subsonic.js",
+      "version": "1.0.0"
+    }
+  ]
+}

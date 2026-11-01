@@ -13,14 +13,14 @@ besides the app you already use.
 - **Private**: your server address, user name and password stay in the app on your device and go only to the
   server you entered. This repository never sees them.
 
-> **Status: early.** The repository is being set up; the plugins below are planned and not released yet.
-> See [CHANGELOG.md](CHANGELOG.md).
+> **Status: early.** The first plugin, Subsonic, is available; the others are planned. See
+> [CHANGELOG.md](CHANGELOG.md).
 
 ## Plugins
 
 | Plugin | What it plays | You provide | Status |
 |---|---|---|---|
-| Subsonic | Navidrome, Airsonic and other Subsonic-compatible servers | Server address, user name, password | Planned |
+| [Subsonic](plugins/subsonic/README.md) | Navidrome, Airsonic and other Subsonic-compatible servers | Server address, user name, password | Available |
 | Jellyfin | Music libraries on a Jellyfin server | Server address, user name, password | Planned |
 | Emby | Music libraries on an Emby server | Server address, user name, password | Planned |
 | WebDAV | Audio files in a WebDAV folder (NAS, cloud drives that offer WebDAV) | Folder address, user name, password | Planned |
@@ -38,8 +38,6 @@ for Windows, macOS, Linux, iOS and Android. Other apps that run plugins in that 
 
 ## Install
 
-Once the first plugins are released:
-
 1. Open the app's plugin settings.
 2. Add the subscription link:
 
@@ -50,8 +48,9 @@ Once the first plugins are released:
    or the link of a single plugin file.
 3. Fill in the plugin's settings (the tune button next to it): your server address, user name and password.
 
-**Home network addresses:** a server on your home network (for example `192.168.0.10`) needs an app that lets a
-plugin reach the address you typed into its settings. TimbreBox does not allow that yet; it is planned.
+**Home network addresses:** for a server on your home network, enter its IP address (for example
+`http://192.168.0.10:4533`) or its `.local` name, not a domain name. The app lets a plugin reach only the home-network
+addresses you typed into its settings; in TimbreBox this needs a version with home-network access for plugins.
 
 ## Disclaimer
 
