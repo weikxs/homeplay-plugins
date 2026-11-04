@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+root=$(git rev-parse --show-toplevel)
+exec python3 "$root/tools/check_repository_text.py" --root "$root" --message "$1" --staged
