@@ -5,10 +5,13 @@ who type their passwords into them. [CONTRIBUTING.md](../../CONTRIBUTING.md) cov
 
 ## 1. Scope
 
-- A plugin connects to a service the user runs or rents (a music server, a WebDAV folder), or to a service with
-  an open API, used with the user's own key when it asks for one.
-- It never gets around a service's access rules: no undocumented request signing, no risk-control or anti-bot
-  workarounds, no paywall, DRM or rate-limit evasion, no scraping of pages that forbid it.
+- A plugin may target video/streaming platforms, self-hosted libraries, WebDAV, open APIs, or other sources.
+  Do not exclude sources solely by platform name, lack of a public API, or user-configuration needs.
+- Document the actual access path, required permissions/configuration, rights and distribution considerations,
+  tested capabilities, and known limitations. Scope inclusion does not authorize DRM circumvention or
+  unauthorized paid access; preserve sandbox, egress, credential, and license protections.
+- Publish only implemented and verified capabilities. YouTube, Bilibili, Douyin, and TikTok are planned plugin
+  targets, not currently available plugins.
 
 ## 2. Format
 
@@ -25,6 +28,19 @@ functions, data shapes and sandbox.
 - Only the modules the sandbox provides may be `require`d (`axios`, `crypto-js`, `he`, `dayjs`, `qs`, `cheerio`,
   `big-integer`).
 
+### Experimental files
+
+Work that is not yet good enough for the subscription lives in `experimental/platforms/<name>.js` and follows
+stricter machine-checked rules:
+
+- `experimental: true`, a prerelease `version` (for example `0.1.1-dev`) and its own `srcUrl` under
+  `experimental/platforms/`; the published checker rejects both directions of a mix-up.
+- `requiredCapabilities` lists what the host must provide (`http`, `media.source`). Declaring a capability does
+  not make the host have it: the adapter checks at call time and throws `extractor_unavailable` when the host
+  lacks the bridge, instead of returning empty results.
+- Document the remaining acceptance gaps in `experimental/platforms/README.md`. A file is published by moving it
+  to `plugins/<name>/` and adding it to `index.json` once its platform evidence exists.
+
 ## 3. Settings and secrets
 
 - Everything the user provides is declared in `userVariables` (`key`, `name`, `hint`) and read with
@@ -37,9 +53,9 @@ functions, data shapes and sandbox.
 
 ## 4. Network
 
-- Requests go only to the server address from the settings, or to the one open API the plugin is written for.
-  Build URLs from that base; never follow a host taken from a response to a different server with the user's
-  credentials.
+- Document the service and CDN hosts a plugin uses. Requests must stay within its purpose and the host's
+  egress policy. Send user credentials only to the intended, explicitly authorized service; do not copy them
+  to a CDN or another host taken from a response or redirect.
 - Keep requests few: one request per search page where the API allows it, and resolve stream URLs only when
   `getMediaSource` is called.
 - Respect the API's documented limits, and set a `timeout` (at most 20 seconds) on every request.

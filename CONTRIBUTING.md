@@ -8,14 +8,14 @@ Thanks for helping! This page is the short version; the full rules for plugin co
 
 ## What belongs here
 
-A plugin is welcome when it connects to:
+Source plugins may target video and streaming platforms (including YouTube, Bilibili, Douyin, and TikTok),
+self-hosted services, WebDAV, open APIs, and other sources. A platform name, lack of a public API, or a need
+for user configuration is not grounds for automatic rejection.
 
-- a service the user runs or rents for themselves (a music server, a WebDAV folder, a NAS), or
-- a service that offers an open API to everyone, used with the user's own key where it asks for one.
-
-A plugin is **not** accepted when it gets around a service's access rules: request signing it does not
-publish, risk-control or anti-bot checks, paywalls, DRM, rate limits, or scraping pages that forbid it. Such
-pull requests are closed without review.
+Describe the proposed access path, required configuration, rights and distribution considerations,
+capabilities, tests, and known limitations in the issue. Review each implementation on its evidence;
+roadmap inclusion does not authorize DRM circumvention or unauthorized paid access. Preserve sandbox,
+egress, credential, and license protections. Do not advertise unimplemented or untested capabilities.
 
 ## Workflow
 
