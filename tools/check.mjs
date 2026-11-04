@@ -2,12 +2,13 @@
 // index.json lists exactly the plugins as they are, and no real personal data
 // is committed. Run with `node tools/check.mjs`; exits non-zero on a problem.
 
-import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { loadPlugin } from './sandbox.mjs';
+import { checkPrivacy } from './privacy.mjs';
+import { checkRuntimeSnapshot } from './runtime_snapshot.mjs';
 
 const repository = 'weikxs/homeplay-plugins';
 const author = 'HomePlay Plugins';
@@ -22,9 +23,11 @@ const semver = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
 /** The raw URL of plugin [name] on `main`: its `srcUrl` and index entry. */
 export const rawUrlOf = (name) =>
   `https://raw.githubusercontent.com/${repository}/main/plugins/${name}/${name}.js`;
+export const experimentalUrlOf = name =>
+  `https://raw.githubusercontent.com/${repository}/main/experimental/platforms/${name}.js`;
 
 /** The problems of the plugin [name] whose code is [source]. */
-export function checkPlugin(name, source) {
+export function checkPlugin(name, source, { experimental = false } = {}) {
   const problems = [];
   if (Buffer.byteLength(source) > maxBytes) {
     problems.push(`${name}: file size is over ${maxBytes / 1024} KB`);
@@ -46,7 +49,19 @@ export function checkPlugin(name, source) {
   if (!text('platform').trim()) problems.push(`${name}: platform is missing`);
   if (!semver.test(text('version'))) problems.push(`${name}: version is not a semantic version`);
   if (text('author') !== author) problems.push(`${name}: author must be "${author}"`);
-  if (text('srcUrl') !== rawUrlOf(name)) problems.push(`${name}: srcUrl must be ${rawUrlOf(name)}`);
+  const expectedUrl = experimental ? experimentalUrlOf(name) : rawUrlOf(name);
+  if (text('srcUrl') !== expectedUrl) problems.push(`${name}: srcUrl must be ${expectedUrl}`);
+  if (experimental) {
+    if (plugin.experimental !== true || !text('version').includes('-')) problems.push(`${name}: experimental files require a marker and prerelease version`);
+    const capabilities = plugin.requiredCapabilities;
+    if (!Array.isArray(capabilities) || capabilities.length === 0 || capabilities.length > 8 ||
+        new Set(capabilities).size !== capabilities.length ||
+        capabilities.some(value => !['http', 'media.source'].includes(value))) {
+      problems.push(`${name}: declare supported requiredCapabilities`);
+    }
+  } else if (plugin.experimental === true) {
+    problems.push(`${name}: experimental plugins cannot enter the published directory`);
+  }
   if (typeof plugin.search !== 'function') problems.push(`${name}: search is not exported as a function`);
   problems.push(...checkVariables(name, plugin.userVariables));
   return problems;
@@ -78,42 +93,30 @@ export function checkIndex(index, plugins) {
   const problems = [];
   const listed = Array.isArray(index?.plugins) ? index.plugins : [];
   if (!Array.isArray(index?.plugins)) problems.push('index.json: plugins must be a list');
-  for (const entry of listed) {
-    const plugin = plugins.find((p) => p.url === entry.url);
-    if (!plugin) {
-      problems.push(`index.json: ${entry.name} is listed but has no plugin at ${entry.url}`);
-    } else if (entry.name !== plugin.platform || entry.version !== plugin.version) {
-      problems.push(
-        `index.json: ${entry.name} ${entry.version} does not match the plugin's platform and version (${plugin.platform} ${plugin.version})`,
-      );
+  if (listed.length > 512) problems.push('index.json: too many entries');
+  const names = new Set(), urls = new Set();
+  for (const [position, entry] of listed.slice(0, 512).entries()) {
+    const label = `index.json: entry ${position + 1}`;
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry) ||
+        typeof entry.name !== 'string' || !entry.name.trim() || entry.name.length > 200 ||
+        typeof entry.url !== 'string' || !entry.url.startsWith('https://') ||
+        typeof entry.version !== 'string' || !semver.test(entry.version)) {
+      problems.push(`${label} has malformed metadata`); continue;
+    }
+    const name = entry.name.trim().toLowerCase();
+    if (names.has(name)) problems.push(`${label} has a duplicate name`);
+    if (urls.has(entry.url)) problems.push(`${label} has a duplicate URL`);
+    names.add(name); urls.add(entry.url);
+    const plugin = plugins.find(p => p.url === entry.url);
+    if (!plugin) problems.push(`${label} has no published plugin`);
+    else if (entry.name !== plugin.platform || entry.version !== plugin.version) {
+      problems.push(`${label} does not match the plugin name and version`);
     }
   }
   for (const plugin of plugins) {
-    if (!listed.some((entry) => entry.url === plugin.url)) {
+    if (!listed.some((entry) => entry && entry.url === plugin.url)) {
       problems.push(`index.json: ${plugin.platform} is not listed`);
     }
-  }
-  return problems;
-}
-
-/** Real personal data in the files git tracks: the local denylist, e-mail addresses, home folders. */
-function checkPrivacy(root) {
-  const files = execFileSync('git', ['ls-files'], { cwd: root, encoding: 'utf8' }).split('\n').filter(Boolean);
-  const denylistFile = join(root, '.privacy-denylist');
-  const patterns = existsSync(denylistFile)
-    ? readFileSync(denylistFile, 'utf8')
-        .split('\n')
-        .filter((line) => line.trim() && !line.startsWith('#'))
-        .map((line) => new RegExp(line, 'i'))
-    : [];
-  patterns.push(/[\w.+-]+@(?!(?:[\w-]+\.)*(?:example\.(?:com|org|net)|example)\b)[\w-]+\.[\w.-]+/);
-  patterns.push(/\/(?:Users|home)\/(?!me\/|<)[\w.-]+\//);
-  const problems = [];
-  for (const file of files) {
-    const lines = readFileSync(join(root, file), 'utf8').split('\n');
-    lines.forEach((line, i) => {
-      if (patterns.some((pattern) => pattern.test(line))) problems.push(`${file}:${i + 1}: possible personal data`);
-    });
   }
   return problems;
 }
@@ -141,15 +144,24 @@ function main() {
       // Already reported by checkPlugin.
     }
   }
+  const experimentalDir = join(root, 'experimental/platforms');
+  const experimentalFiles = existsSync(experimentalDir)
+    ? readdirSync(experimentalDir, { withFileTypes: true }).filter(entry => entry.isFile() && entry.name.endsWith('.js')) : [];
+  for (const entry of experimentalFiles) {
+    const name = entry.name.slice(0, -3);
+    problems.push(...checkPlugin(name, readFileSync(join(experimentalDir, entry.name), 'utf8'), { experimental: true }));
+  }
   const indexFile = join(root, 'index.json');
   if (existsSync(indexFile)) {
-    problems.push(...checkIndex(JSON.parse(readFileSync(indexFile, 'utf8')), plugins));
+    try { problems.push(...checkIndex(JSON.parse(readFileSync(indexFile, 'utf8')), plugins)); }
+    catch { problems.push('index.json: invalid JSON'); }
   } else if (plugins.length > 0) {
     problems.push('index.json is missing');
   }
+  problems.push(...checkRuntimeSnapshot(root));
   problems.push(...checkPrivacy(root));
   for (const problem of problems) console.error(problem);
-  console.log(problems.length === 0 ? `ok: ${plugins.length} plugin(s) checked` : `${problems.length} problem(s)`);
+  console.log(problems.length === 0 ? `ok: ${plugins.length} published and ${experimentalFiles.length} experimental plugin(s) checked` : `${problems.length} problem(s)`);
   process.exitCode = problems.length === 0 ? 0 : 1;
 }
 

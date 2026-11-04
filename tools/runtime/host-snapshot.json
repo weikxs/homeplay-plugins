@@ -1,0 +1,36 @@
+{
+  "repository": "https://github.com/weikxs/timbrebox",
+  "commit": "4919e74318f7de1f7302f29c7fbd84c70eb74d33",
+  "assets": [
+    {
+      "hostAsset": "prelude.js",
+      "localFile": "tools/runtime/prelude.js",
+      "sha256": "420b3c9c46c1b612676fff92d70fbd0821d4c26b17c658086a7e3b4d98897e4d"
+    },
+    {
+      "hostAsset": "url.js",
+      "localFile": "tools/runtime/url.js",
+      "sha256": "18779d790362e5ad2ab0eb8d0fa868a9231b9d80e1a68490ec370e4b7dc66ce3"
+    },
+    {
+      "hostAsset": "axios.js",
+      "localFile": "tools/runtime/axios.js",
+      "sha256": "3238f4120d9c261d136678687ec2d091ca165563083d1b6cd3a211e81034a93f"
+    },
+    {
+      "hostAsset": "guest_search_parser.js",
+      "localFile": "extractors/guest-search-parser.cjs",
+      "sha256": "115fa9dfcde66c5fa12b2719d606023574b61aabeea789d4f0f919ae86d65b29"
+    },
+    {
+      "hostAsset": "guest_search_capture.js",
+      "localFile": "tools/runtime/guest_search_capture.js",
+      "sha256": "d99b7186def477e97e1713274a3c67e7ad3cca979eb31c04a7d9348df8908789"
+    },
+    {
+      "hostAsset": "guest_search_diagnostic.js",
+      "localFile": "tools/runtime/guest_search_diagnostic.js",
+      "sha256": "152f9743a2bc98373febbbf2356ee3147f0a8a56e4adf0fd8730b5e891e8e924"
+    }
+  ]
+}

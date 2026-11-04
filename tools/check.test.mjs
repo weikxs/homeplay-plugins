@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { checkIndex, checkPlugin, rawUrlOf } from './check.mjs';
+import { checkIndex, checkPlugin, rawUrlOf, experimentalUrlOf } from './check.mjs';
 
 const good = `
 const CryptoJS = require('crypto-js');
@@ -56,10 +56,35 @@ test('an index that lists every plugin as it is passes', () => {
   assert.deepEqual(checkIndex(index, [plugin]), []);
 });
 
+test('duplicate subscription names and URLs cannot pass publication checks', () => {
+  const entry = { name: 'Subsonic', version: '1.0.0', url: rawUrlOf('subsonic') };
+  const problems = checkIndex({ plugins: [entry, { ...entry }] }, [plugin]);
+  assert.ok(problems.some(problem => /duplicate name/.test(problem)));
+  assert.ok(problems.some(problem => /duplicate URL/.test(problem)));
+});
+
+test('malformed subscription entries report errors instead of crashing', () => {
+  for (const entry of [null, false, 1, [], {}, { name: 'Subsonic', url: rawUrlOf('subsonic'), version: null }]) {
+    assert.ok(checkIndex({ plugins: [entry] }, [plugin]).some(problem => /malformed/.test(problem)));
+  }
+});
+
+test('experimental sources require their own path, marker, prerelease and declared host capabilities', () => {
+  const experimental = good.replace(rawUrlOf('subsonic'), experimentalUrlOf('subsonic'))
+    .replace("version: '1.0.0'", "version: '1.0.1-dev', experimental: true, requiredCapabilities: ['media.source']");
+  assert.deepEqual(checkPlugin('subsonic', experimental, { experimental: true }), []);
+  for (const broken of [experimental.replace('experimental: true', 'experimental: false'),
+    experimental.replace('1.0.1-dev', '1.0.1'), experimental.replace("['media.source']", "['unknown']")]) {
+    assert.ok(checkPlugin('subsonic', broken, { experimental: true }).length > 0);
+  }
+  assert.ok(checkPlugin('subsonic', good.replace("version: '1.0.0'", "version: '1.0.0', experimental: true"))
+    .some(problem => /cannot enter/.test(problem)));
+});
+
 test('reports an index out of step with the plugins', () => {
   const stale = { plugins: [{ name: 'Subsonic', version: '0.9.0', url: rawUrlOf('subsonic') }] };
   const extra = { plugins: [{ name: 'Gone', version: '1.0.0', url: rawUrlOf('gone') }] };
   assert.ok(checkIndex(stale, [plugin]).some((problem) => /version/.test(problem)));
-  assert.ok(checkIndex(extra, [plugin]).some((problem) => /Gone/.test(problem)));
+  assert.ok(checkIndex(extra, [plugin]).some((problem) => /no published plugin/.test(problem)));
   assert.ok(checkIndex(extra, [plugin]).some((problem) => /Subsonic/.test(problem)));
 });

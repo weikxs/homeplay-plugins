@@ -9,7 +9,7 @@
 ## Checklist
 
 - [ ] It starts from an issue; a new plugin had a maintainer's go-ahead
-- [ ] The plugin connects only to a service the user runs or to an open API, and gets around no access rule
+- [ ] Access path, required configuration, rights/distribution considerations, tested capabilities and limitations are documented; sandbox, egress and credential protections are preserved
 - [ ] One purpose: one plugin or one fix
 - [ ] Follows [the plugin standards](../docs/development/standards.md); `version` bumped and `CHANGELOG.md` updated
 - [ ] Tests written first and passing; they use demo data and no real server
