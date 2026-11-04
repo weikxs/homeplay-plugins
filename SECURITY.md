@@ -30,8 +30,8 @@ We credit reporters in the changelog unless they prefer to stay anonymous.
 
 ## What a plugin may do
 
-- Send requests only to the server the user entered in its settings, or to the open API it is written for.
-- Send the user's password or token only to that server, and only in the way the server's API documents.
-- Never log, store or send settings anywhere else.
+- Send requests only to the service and CDN hosts documented for the plugin's purpose, subject to the app's egress policy.
+- Send the user's password or token only to its intended, explicitly authorized service; never forward it to a CDN or unrelated host through a response or redirect.
+- Never log secrets or export settings to unrelated services. Keep user configuration in the app's protected local settings storage.
 
 A plugin that breaks one of these rules is a security issue.

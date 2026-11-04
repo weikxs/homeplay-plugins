@@ -2,9 +2,8 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
-Free plugins that play **your own music at home**: the music server on your NAS, the files in your WebDAV
-folder, and open music catalogues you sign up for yourself. One subscription link, nothing to install
-besides the app you already use.
+Free **music-source plugins** for compatible players: video and streaming platforms, the music server on
+your NAS, WebDAV folders, and open music catalogues. One subscription link for published plugins.
 
 - **Free**: no account with us, no ads, no paid tier.
 - **Source available**: every plugin is a single readable JavaScript file you can check before you install it.
@@ -27,9 +26,16 @@ besides the app you already use.
 | Plex | Music libraries on a Plex server | Server address, Plex token | Planned |
 | Jamendo | Free, openly licensed music | Your own Jamendo client id | Planned |
 | Podcast Index | Podcasts | Your own Podcast Index API key and secret | Planned |
+| YouTube | Audio from platform content | To be determined during implementation | Planned, not available |
+| Bilibili | Audio from platform content | To be determined during implementation | Planned, not available |
+| Douyin | Audio from platform content | To be determined during implementation | Planned, not available |
+| TikTok | Audio from platform content | To be determined during implementation | Planned, not available |
 
-Plugins connect only to services you run yourself or that offer an open API to everyone. This repository
-contains no plugin that gets around a platform's access rules, and none will be accepted.
+The scope includes platform sources, self-hosted libraries, and open APIs; sources are not excluded solely
+by platform name or the absence of a public API. Each implementation must document its access requirements,
+rights and distribution considerations, tested capabilities, and known limitations. Planned plugins are not
+included in the subscription until published. Inclusion in the roadmap is not a claim of permission to
+extract or download content.
 
 ## Supported apps
 
@@ -78,7 +84,7 @@ Using a plugin from this repository means you have read and accepted this discla
 
 ## Contributing
 
-New plugins are welcome when they connect to a service the user runs or to an open API; see
+New source plugins are welcome across platforms and service types; see
 [CONTRIBUTING.md](CONTRIBUTING.md) and the [plugin standards](docs/development/standards.md). Report security
 issues privately, see [SECURITY.md](SECURITY.md).
 

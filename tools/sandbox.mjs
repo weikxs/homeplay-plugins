@@ -20,13 +20,16 @@ const runtime = Object.fromEntries(
  * Loads the plugin in [source] and returns `{ plugin, requests, logs }`.
  *
  * - `variables`: what the user entered in the plugin's settings.
+ * - `mediaRespond(request)`: optional fixture response for fixed host media RPC;
+ *   no native process is started by this test harness.
  * - `respond(request)`: answers one request (`{ method, url, fullUrl, headers,
  *   params, data, timeout }`) with `{ status, headers, data }` (data as text
  *   or a value sent as JSON); throwing makes the request fail like a network
  *   error. Every request is also kept in `requests`.
  */
-export function loadPlugin(source, { variables = {}, respond = noNetwork, os = 'linux', lang = 'en-US' } = {}) {
+export function loadPlugin(source, { variables = {}, respond = noNetwork, mediaRespond = noMedia, os = 'linux', lang = 'en-US' } = {}) {
   const requests = [];
+  const mediaRequests = [];
   const logs = [];
   const context = vm.createContext({ setTimeout, clearTimeout });
   context.sendMessage = (channel, payload) => {
@@ -34,6 +37,13 @@ export function loadPlugin(source, { variables = {}, respond = noNetwork, os = '
       logs.push(String(payload));
     } else if (channel === '__hostHttp') {
       answer(context, JSON.parse(payload), respond, requests);
+    } else if (channel === '__hostMedia') {
+      const request = JSON.parse(payload);
+      mediaRequests.push(request);
+      Promise.resolve().then(() => mediaRespond(request)).then(
+        (value) => context.__resolveHost(request.id, true, JSON.parse(JSON.stringify(value))),
+        (error) => context.__resolveHost(request.id, false, { message: error.message, code: error.code }),
+      );
     }
     return '';
   };
@@ -49,7 +59,7 @@ export function loadPlugin(source, { variables = {}, respond = noNetwork, os = '
   vm.runInContext('var module={exports:{}};var exports=module.exports;', context);
   vm.runInContext(source, context);
   const plugin = vm.runInContext('__exportOf(module)', context);
-  return { plugin, requests, logs };
+  return { plugin, requests, mediaRequests, logs };
 }
 
 function answer(context, request, respond, requests) {
@@ -65,6 +75,7 @@ function answer(context, request, respond, requests) {
       (response) =>
         context.__resolveHost(request.id, true, {
           status: response?.status ?? 200,
+          url: response?.url ?? recorded.fullUrl,
           headers: response?.headers ?? {},
           data: typeof response?.data === 'string' ? response.data : JSON.stringify(response?.data ?? null),
         }),
@@ -74,6 +85,12 @@ function answer(context, request, respond, requests) {
 
 function noNetwork(request) {
   throw new Error(`No response given for ${request.method} ${request.url}`);
+}
+
+function noMedia() {
+  const error = new Error('No media backend response given in this test');
+  error.code = 'extractor_unconfigured';
+  throw error;
 }
 
 // The parts of crypto-js the plugins here use, on top of node:crypto.
